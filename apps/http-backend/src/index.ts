@@ -7,7 +7,7 @@ import {prismaClient} from "@repo/db/client"
 import {CreateRoomSchema, CreateUserSchema, SigninSchema} from "@repo/common/types"
 const app = express()
 app.use(express.json());
-
+//! Add rate limiting and complete the other todos. Also add access control. Right now any user can join any room and stuff. Right now we are able to query any room based on the room id which is not good. Also all of the ws code is in one file, make it singleton, cleaner to read
 app.post("/signup", async (req, res) => {
     //! Add zod validations here
     const parsedData = CreateUserSchema.safeParse(req.body);
@@ -101,5 +101,24 @@ app.post("/room", middleware, async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 })
+
+app.get("/chats/:roomId", async (req, res) => {
+    const roomId = Number(req.params.roomId);
+    try {
+        const chats = await prismaClient.chat.findMany({
+            where: {
+                roomId
+            },
+            orderBy: {
+                id: 'desc'
+            },
+            take: 50,
+        })
+    
+        return res.json({chats})
+    } catch (error) {
+        return res.status(500).json({ error: "Internal server error" });
+    }
+}) 
 
 app.listen(3001)
