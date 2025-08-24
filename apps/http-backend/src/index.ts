@@ -121,4 +121,23 @@ app.get("/chats/:roomId", async (req, res) => {
     }
 }) 
 
+app.get("/room/:slug", async (req, res) => {
+    const { slug } = req.params;
+    try {
+        const room = await prismaClient.room.findUnique({
+            where: {
+                slug
+            }
+        });
+
+        if (!room) {
+            return res.status(404).json({ error: "Room not found" });
+        }
+
+        return res.json({ room });
+    } catch (error) {
+        return res.status(500).json({ error: "Internal server error" });
+    }
+})
+
 app.listen(3001)

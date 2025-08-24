@@ -68,7 +68,7 @@ wss.on('connection', function connection(ws, request) {
             //! ideally you shouldnt store in db like this directly. You should use queues and store it in them and through a pipeline store in db.
             await prismaClient.chat.create({
                 data: {
-                    roomId: parsedData.roomId,
+                    roomId: Number(parsedData.roomId),
                     userId: userId,
                     message: parsedData.message
                 }
