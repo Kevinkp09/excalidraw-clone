@@ -5,8 +5,11 @@ import { middleware } from "./middleware";
 import bcrypt from "bcrypt"
 import {prismaClient} from "@repo/db/client"
 import {CreateRoomSchema, CreateUserSchema, SigninSchema} from "@repo/common/types"
+import cors from "cors";
+
 const app = express()
 app.use(express.json());
+app.use(cors())
 //! Add rate limiting and complete the other todos. Also add access control. Right now any user can join any room and stuff. Right now we are able to query any room based on the room id which is not good. Also all of the ws code is in one file, make it singleton, cleaner to read
 app.post("/signup", async (req, res) => {
     //! Add zod validations here
