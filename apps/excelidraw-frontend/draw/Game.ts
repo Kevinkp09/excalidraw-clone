@@ -17,10 +17,7 @@ type Shape =
     }
   | {
       type: "pencil";
-      startX: number;
-      startY: number;
-      endX: number;
-      endY: number;
+      points: { x: number; y: number }[];
     };
 
 export class Game {
@@ -32,6 +29,7 @@ export class Game {
   private startX = 0;
   private startY = 0;
   private selectedTool: Tool = "circle";
+  private pencilPoints: { x: number; y: number }[] = [];
 
   socket: WebSocket;
 
@@ -71,7 +69,7 @@ export class Game {
 
       if (message.type == "chat") {
         const parsedShape = JSON.parse(message.message);
-        this.existingShapes.push(parsedShape.shape);
+        this.existingShapes?.push(parsedShape.shape);
         this.clearCanvas();
       }
     };
@@ -82,7 +80,7 @@ export class Game {
     this.ctx.fillStyle = "rgba(0, 0, 0)";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.existingShapes.map((shape) => {
+    this.existingShapes?.map((shape) => {
       if (shape.type === "rect") {
         this.ctx.strokeStyle = "rgba(255, 255, 255)";
         this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
@@ -98,6 +96,19 @@ export class Game {
         );
         this.ctx.stroke();
         this.ctx.closePath();
+      } else if (shape.type === "pencil") {
+        console.log(shape);
+        console.log(shape.points);
+        this.ctx.strokeStyle = "rgba(255, 255, 255)";
+        this.ctx.beginPath();
+        for (let i = 1; i < shape.points.length; i++) {
+          const prev = shape.points[i - 1];
+          const curr = shape.points[i];
+          this.ctx.moveTo(prev.x, prev.y);
+          this.ctx.lineTo(curr.x, curr.y);
+        }
+        this.ctx.stroke();
+        this.ctx.closePath();
       }
     });
   }
@@ -106,7 +117,11 @@ export class Game {
     this.clicked = true;
     this.startX = e.clientX;
     this.startY = e.clientY;
+    if (this.selectedTool === "pencil") {
+      this.pencilPoints = [{ x: e.clientX, y: e.clientY }];
+    }
   };
+
   mouseUpHandler = (e: any) => {
     this.clicked = false;
     const width = e.clientX - this.startX;
@@ -114,6 +129,9 @@ export class Game {
 
     const selectedTool = this.selectedTool;
     let shape: Shape | null = null;
+    if (!this.existingShapes) {
+      this.existingShapes = [];
+    }
     if (selectedTool === "rect") {
       shape = {
         type: "rect",
@@ -133,11 +151,9 @@ export class Game {
     } else if (selectedTool === "pencil") {
       shape = {
         type: "pencil",
-        startX: this.startX,
-        startY: this.startY,
-        endX: e.clientX,
-        endY: e.clientY,
+        points: this.pencilPoints,
       };
+      this.pencilPoints = [];
     }
 
     if (!shape) {
@@ -156,6 +172,7 @@ export class Game {
       })
     );
   };
+
   mouseMoveHandler = (e: any) => {
     if (this.clicked) {
       const width = e.clientX - this.startX;
@@ -163,7 +180,6 @@ export class Game {
       this.clearCanvas();
       this.ctx.strokeStyle = "rgba(255, 255, 255)";
       const selectedTool = this.selectedTool;
-      console.log(selectedTool);
       if (selectedTool === "rect") {
         this.ctx.strokeRect(this.startX, this.startY, width, height);
       } else if (selectedTool === "circle") {
@@ -172,13 +188,19 @@ export class Game {
         const centerY = this.startY + radius;
         this.ctx.beginPath();
         this.ctx.arc(centerX, centerY, Math.abs(radius), 0, Math.PI * 2);
-        this.ctx.stroke();  
+        this.ctx.stroke();
         this.ctx.closePath();
       } else if (selectedTool === "pencil") {
         console.log(e);
+        console.log(e.clientX, e.clientY);
+        this.pencilPoints.push({ x: e.clientX, y: e.clientY });
         this.ctx.beginPath();
-        this.ctx.moveTo(this.startX, this.startY);
-        this.ctx.lineTo(e.clientX, e.clientY);
+        for (let i = 1; i < this.pencilPoints.length; i++) {
+          const prev = this.pencilPoints[i - 1];
+          const curr = this.pencilPoints[i];
+          this.ctx.moveTo(prev.x, prev.y);
+          this.ctx.lineTo(curr.x, curr.y);
+        }
         this.ctx.stroke();
         this.ctx.closePath();
       }

@@ -37,6 +37,7 @@ export function Canvas({
       style={{
         height: "100vh",
         overflow: "hidden",
+        backgroundColor: "blue",
       }}
     >
       <canvas
@@ -64,7 +65,7 @@ function Topbar({
         left: 10,
       }}
     >
-      <div className="flex gap-t">
+      <div className="flex gap-2">
         <IconButton
           onClick={() => {
             setSelectedTool("pencil");

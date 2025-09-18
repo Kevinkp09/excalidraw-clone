@@ -22,7 +22,7 @@ app.post("/signup", async (req, res) => {
     return res.status(400).json({ error: "Invalid data" });
   }
   const { username, password, name } = parsedData.data;
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  const hashedPassword = await bcrypt.hashSync(password, 10);
 
   try {
     let user_with_email = await prismaClient.user.findUnique({
@@ -44,6 +44,7 @@ app.post("/signup", async (req, res) => {
     });
     res.json({ message: "Signup successful", userId: user.id });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
